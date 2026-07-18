@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SmartTools">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Smart Tools — Traductor · QR · Libros</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;color:#1a1a2e}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:#1a1a2e;color:#fff;padding:18px;position:fixed;width:220px;height:100vh;overflow-y:auto;z-index:100}
+.logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.3);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.nl{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:2px;margin:12px 0 5px;text-transform:uppercase}
+.mi{padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;transition:.15s;border-left:3px solid transparent;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.7);margin-bottom:2px}
+.mi:hover{background:rgba(255,255,255,.06);color:#fff}
+.mi.active{background:rgba(255,255,255,.1);border-left-color:#a78bfa;color:#fff;font-weight:600}
+.mi .cnt{margin-left:auto;background:rgba(167,139,250,.3);padding:1px 7px;border-radius:10px;font-size:10px}
+.main{margin-left:220px;padding:22px}
+.page{display:none}.page.active{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.topbar{background:#fff;padding:14px 18px;border-radius:12px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.topbar-title{font-size:19px;font-weight:800;color:#1a1a2e}
+.panel{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:14px}
+.ptitle{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+button{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:9px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:.15s}
+button:hover{opacity:.9;transform:translateY(-1px)}
+.btn-g{background:linear-gradient(135deg,#10b981,#059669)}
+.btn-r{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.btn-o{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.btn-gray{background:#6b7280}
+.btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+.btn-violet{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 9px;font-size:10px;font-weight:700}
+.btn-outline{background:none;border:1.5px solid #667eea;color:#667eea;padding:7px 14px}
+.btn-outline:hover{background:#667eea;color:#fff}
+textarea,input,select{width:100%;padding:10px 12px;border:2px solid #e8ecf0;border-radius:9px;font-size:13px;font-family:inherit;transition:.15s;background:#fafbff}
+textarea:focus,input:focus,select:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.1)}
+label{font-size:11px;font-weight:700;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.alert{padding:10px 13px;border-radius:8px;margin:8px 0;font-size:12px;line-height:1.7}
+.a-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.a-err{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.a-info{background:#f0f4ff;border:1px solid #c7d2fe;color:#3730a3}
+.a-warn{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-right:3px}
+.badge-p{background:#f3e8ff;color:#7c3aed}.badge-b{background:#dbeafe;color:#1d4ed8}.badge-g{background:#d1fae5;color:#065f46}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#f0f4ff;border:1px solid #c7d2fe;padding:3px 8px;border-radius:20px;font-size:11px;color:#4338ca;cursor:pointer;font-weight:600}
+.chip:hover{background:#e0e7ff}
+.chip.active-chip{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
+/* ── TRADUCTOR ── */
+.lang-swap{background:rgba(167,139,250,.15);border:none;color:#7c3aed;width:38px;height:38px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.2s}
+.lang-swap:hover{background:rgba(167,139,250,.3);transform:rotate(180deg)}
+.tra-result{background:#f8f9ff;border:2px solid #e0e7ff;border-radius:10px;padding:14px;min-height:120px;font-size:14px;line-height:1.7;color:#1a1a2e;position:relative;white-space:pre-wrap}
+.tra-result.loading{color:#aaa}
+.char-count{font-size:10px;color:#aaa;text-align:right;margin-top:4px}
+.folder-tag{display:inline-flex;align-items:center;gap:4px;background:#faf5ff;border:1px solid #ddd6fe;padding:4px 10px;border-radius:20px;font-size:12px;color:#6d28d9;cursor:pointer;margin:3px}
+.folder-tag:hover{background:#ede9fe}
+.folder-tag.selected{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border-color:transparent}
+/* ── QR ── */
+.qr-preview{width:220px;height:220px;border-radius:12px;border:2px solid #e0e7ff;display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden;margin:0 auto}
+.qr-preview img{width:100%;height:100%}
+.qr-types{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.qr-type-btn{background:#f0f4ff;border:1.5px solid #c7d2fe;color:#4338ca;padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.qr-type-btn:hover{background:#e0e7ff}
+.qr-type-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
+.color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.color-row label{margin-bottom:0;white-space:nowrap}
+.color-row input[type=color]{width:44px;height:36px;padding:2px;cursor:pointer;border-radius:6px}
+.qr-history-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.qr-history-item:last-child{border-bottom:none}
+/* ── LIBROS ── */
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:14px}
+.book-card{background:#fff;border-radius:10px;overflow:hidden;border:1.5px solid #e8ecf0;cursor:pointer;transition:.2s}
+.book-card:hover{border-color:#a78bfa;box-shadow:0 4px 16px rgba(167,139,250,.2);transform:translateY(-2px)}
+.book-cover{width:100%;height:190px;object-fit:cover;background:linear-gradient(135deg,#e0e7ff,#f0f4ff);display:flex;align-items:center;justify-content:center;font-size:40px;color:#a0aec0}
+.book-cover img{width:100%;height:100%;object-fit:cover}
+.book-info{padding:10px}
+.book-title{font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-author{font-size:10px;color:#6b7280;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-year{font-size:10px;color:#a0aec0}
+.search-bar{display:flex;gap:8px;margin-bottom:14px}
+.search-bar input{margin:0}
+.search-bar button{white-space:nowrap;flex-shrink:0}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.no-cover{width:100%;height:190px;background:linear-gradient(135deg,#667eea20,#764ba220);display:flex;align-items:center;justify-content:center;font-size:48px}
+/* ── MODAL ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(10,10,30,.5);z-index:200;justify-content:center;align-items:center;backdrop-filter:blur(3px)}
+.modal.active{display:flex}
+.mbox{background:#fff;border-radius:16px;padding:0;max-width:680px;width:95%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.mbox-head{padding:20px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
+.mbox-body{padding:16px 22px 22px;overflow-y:auto}
+.close-x{background:rgba(0,0,0,.07);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;flex-shrink:0;padding:0;line-height:1}
+.close-x:hover{background:rgba(0,0,0,.15);transform:none}
+.book-detail-cover{width:130px;height:190px;object-fit:cover;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0}
+/* ── CARPETAS ── */
+.folder-card{border:1.5px solid #e8ecf0;border-radius:10px;padding:14px;cursor:pointer;transition:.2s}
+.folder-card:hover{border-color:#a78bfa;box-shadow:0 2px 12px rgba(167,139,250,.15)}
+.saved-item{border-bottom:1px solid #f4f4f4;padding:10px 0}
+.saved-item:last-child{border-bottom:none}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:18px;right:18px;color:#fff;padding:11px 16px;border-radius:9px;z-index:300;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:sli .25s ease;max-width:280px}
+@keyframes sli{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+.spinner{width:28px;height:28px;border:3px solid #e0e7ff;border-top-color:#667eea;border-radius:50%;animation:spin 1s linear infinite;margin:16px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:800px){.app{grid-template-columns:1fr}.sidebar{position:relative;width:100%;height:auto}.main{margin-left:0}.g2,.g3{grid-template-columns:1fr}.books-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">✨ Smart Tools</div>
+  <div class="logo-sub">Todo en uno</div>
+  <div class="nl">Herramientas</div>
+  <div class="mi active" id="nav-traductor" onclick="nav('traductor',this)">🌐 Traductor</div>
+  <div class="mi" id="nav-qr" onclick="nav('qr',this)">📷 Generador QR</div>
+  <div class="mi" id="nav-libros" onclick="nav('libros',this)">📚 Buscador de Libros</div>
+  <div class="nl">Guardados</div>
+  <div class="mi" id="nav-carpetas" onclick="nav('carpetas',this)">📁 Mis Carpetas <span class="cnt" id="cnt-carpetas">0</span></div>
+  <div class="mi" id="nav-listas" onclick="nav('listas',this)">📖 Mis Listas <span class="cnt" id="cnt-listas">0</span></div>
+  <div class="mi" id="nav-qrhistory" onclick="nav('qrhistory',this)">🗂 QRs Guardados <span class="cnt" id="cnt-qr">0</span></div>
+  <div class="nl">Configuración</div>
+  <div class="mi" id="nav-cloud" onclick="nav('cloud',this)">☁️ Cloud & Sync</div>
+  <div id="pwa-install-btn" style="display:none;margin-top:8px">
+    <button onclick="pwaInstall()" style="width:100%;font-size:12px;background:linear-gradient(135deg,#10b981,#059669)">📲 Instalar App</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ── TRADUCTOR ── -->
+<div id="traductor" class="page active">
+  <div class="topbar">
+    <div class="topbar-title">🌐 Traductor</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-gray" onclick="trLimpiar()">🗑 Limpiar</button>
+      <button class="btn-sm btn-g" onclick="trGuardar()">💾 Guardar</button>
+    </div>
+  </div>
+  <!-- Lang selector -->
+  <div class="panel" style="padding:14px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <label>Idioma de origen</label>
+        <select id="tr-from">
+          <option value="auto">Detectar automáticamente</option>
+          <option value="es">Español</option>
+          <option value="en">Inglés</option>
+          <option value="pt">Portugués</option>
+          <option value="fr">Francés</option>
+          <option value="de">Alemán</option>
+          <option value="it">Italiano</option>
+          <option value="zh">Chino</option>
+          <option value="ja">Japonés</option>
+          <option value="ko">Coreano</option>
+          <option value="ar">Árabe</option>
+          <option value="ru">Ruso</option>
+          <option value="nl">Holandés</option>
+          <option value="pl">Polaco</option>
+          <option value="tr">Turco</option>
+          <option value="hi">Hindi</option>
+        </select>
+      </div>
+      <button class="lang-swap" onclick="trSwap()" title="Intercambiar idiomas">⇄</button>
+      <div style="flex:1">
+        <label>Idioma de destino</label>
+        <select id="tr-to">
+          <option value="en">Inglés</option>
+          <option value="es">Español</option>
+          <option value="pt">Portugués</option>
+          <option value="fr">Francés</option>
+          <option value="de">Alemán</option>
+          <option value="it">Italiano</option>
+          <option value="zh">Chino</option>
+          <option value="ja">Japonés</option>
+          <option value="ko">Coreano</option>
+          <option value="ar">Árabe</option>
+          <option value="ru">Ruso</option>
+          <option value="nl">Holandés</option>
+          <option value="pl">Polaco</option>
+          <option value="tr">Turco</option>
+          <option value="hi">Hindi</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="panel">
+      <label>Texto original</label>
+      <textarea id="tr-input" rows="8" placeholder="Escribí o pegá el texto aquí..." oninput="trAutoCount()"></textarea>
+      <div class="char-count"><span id="tr-chars">0</span> caracteres</div>
+      <button style="width:100%;margin-top:10px" onclick="traducir()">🌐 Traducir</button>
+    </div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="margin-bottom:0">Traducción</label>
+        <div style="display:flex;gap:4px">
+          <button class="btn-xs btn-gray" onclick="trCopiar()">📋 Copiar</button>
+          <button class="btn-xs btn-blue" onclick="trCompartir()">📤 Compartir</button>
+          <button class="btn-xs btn-o" onclick="trVoz()">🔊 Leer</button>
+        </div>
+      </div>
+      <div class="tra-result" id="tr-result">La traducción aparecerá acá...</div>
+      <div id="tr-detected" style="font-size:10px;color:#aaa;margin-top:6px"></div>
+    </div>
+  </div>
+  <!-- Guardar en carpeta -->
+  <div class="panel" id="tr-save-panel" style="display:none">
+    <div class="ptitle">💾 Guardar en carpeta</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input id="tr-new-folder" placeholder="Nueva carpeta..." style="margin:0">
+      <button class="btn-violet btn-sm" onclick="trCrearCarpeta()">+ Crear</button>
+    </div>
+    <div id="tr-folders-list"></div>
+    <button class="btn-g" style="margin-top:10px;width:100%" onclick="trConfirmarGuardar()">✅ Guardar traducción</button>
+  </div>
+</div>
+
+<!-- ── QR GENERATOR ── -->
+<div id="qr" class="page">
+  <div class="topbar"><div class="topbar-title">📷 Generador QR</div></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="ptitle">Tipo de contenido</div>
+      <div class="qr-types">
+        <button class="qr-type-btn active" onclick="qrSetTipo('url',this)">🔗 URL</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('texto',this)">📝 Texto</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('whatsapp',this)">💬 WhatsApp</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('email',this)">📧 Email</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('wifi',this)">📶 WiFi</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('tel',this)">📞 Teléfono</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('vcard',this)">👤 Contacto</button>
+        <button class="qr-type-btn" onclick="qrSetTipo('youtube',this)">▶️ YouTube</button>
+      </div>
+      <div id="qr-fields"></div>
+      <div class="color-row" style="margin-top:12px">
+        <label>Color QR</label>
+        <input type="color" id="qr-color" value="#1a1a2e" onchange="qrGenerar()">
+        <label>Fondo</label>
+        <input type="color" id="qr-bg" value="#ffffff" onchange="qrGenerar()">
+      </div>
+      <div style="margin-bottom:10px">
+        <label>Tamaño: <span id="qr-size-val">280</span>px</label>
+        <input type="range" id="qr-size" min="120" max="500" value="280" oninput="qrSizeUpdate();qrGenerar()" style="border:none;background:none;padding:0;margin:4px 0 0">
+      </div>
+      <button style="width:100%" onclick="qrGenerar()">⚡ Generar QR</button>
+    </div>
+    <div class="panel" style="text-align:center">
+      <div class="ptitle" style="justify-content:center">Vista previa</div>
+      <div class="qr-preview" id="qr-preview">
+        <span style="color:#ccc;font-size:13px">Completá los datos</span>
+      </div>
+      <div id="qr-buttons" style="display:flex;gap:8px;justify-content:center;margin-top:14px;display:none">
+        <button class="btn-g btn-sm" onclick="qrDescargar()">📥 Descargar PNG</button>
+        <button class="btn-blue btn-sm" onclick="qrGuardar()">💾 Guardar</button>
+        <button class="btn-gray btn-sm" onclick="qrCopiarUrl()">📋 Copiar URL</button>
+      </div>
+      <div id="qr-url-display" style="font-size:10px;color:#aaa;margin-top:8px;word-break:break-all"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIBROS ── -->
+<div id="libros" class="page">
+  <div class="topbar">
+    <div class="topbar-title">📚 Buscador de Libros</div>
+    <button class="btn-sm btn-o" onclick="libMostrarLista()">📖 Mis listas</button>
+  </div>
+  <div class="panel">
+    <div class="search-bar">
+      <input id="lib-query" placeholder="Buscá por título, autor, ISBN o tema..." onkeydown="if(event.key==='Enter')buscarLibros()">
+      <button onclick="buscarLibros()">🔍 Buscar</button>
+    </div>
+    <div class="filter-row" id="lib-filters">
+      <span class="chip active-chip" onclick="libFiltro('all',this)">📚 Todos</span>
+      <span class="chip" onclick="libFiltro('free',this)">🆓 Gratis / PDF</span>
+      <span class="chip" onclick="libFiltro('ebook',this)">📱 eBook</span>
+    </div>
+    <div id="lib-status" style="font-size:12px;color:#aaa"></div>
+    <div id="lib-results" class="books-grid"></div>
+    <div id="lib-load-more" style="display:none;text-align:center;margin-top:14px">
+      <button class="btn-gray" onclick="buscarLibrosMas()">Cargar más resultados</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARPETAS ── -->
+<div id="carpetas" class="page">
+  <div class="topbar">
+    <div class="topbar-title">📁 Mis Carpetas</div>
+    <button class="btn-violet btn-sm" onclick="carpetaNueva()">+ Nueva carpeta</button>
+  </div>
+  <div id="carpetas-list"></div>
+</div>
+
+<!-- ── LISTAS DE LIBROS ── -->
+<div id="listas" class="page">
+  <div class="topbar"><div class="topbar-title">📖 Mis Listas de Libros</div></div>
+  <div class="g3">
+    <div class="panel">
+      <div class="ptitle">🔖 Quiero leer <span style="font-size:11px;color:#aaa;font-weight:400" id="cnt-ql"></span></div>
+      <div id="lista-quiero"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">📖 Leyendo <span style="font-size:11px;color:#aaa;font-weight:400" id="cnt-le"></span></div>
+      <div id="lista-leyendo"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">✅ Leídos <span style="font-size:11px;color:#aaa;font-weight:400" id="cnt-leido"></span></div>
+      <div id="lista-leido"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QR GUARDADOS ── -->
+<div id="qrhistory" class="page">
+  <div class="topbar"><div class="topbar-title">🗂 QRs Guardados</div></div>
+  <div class="panel">
+    <div id="qr-history-list"></div>
+  </div>
+</div>
+
+
+<!-- ── CLOUD & SYNC ── -->
+<div id="cloud" class="page">
+  <div class="topbar">
+    <div class="topbar-title">☁️ Cloud & Sync</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-g" onclick="sbSync()">🔄 Sincronizar ahora</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ptitle">Conectar con Supabase (sincronización en la nube)</div>
+    <div class="alert a-info" style="margin-bottom:14px">
+      Conectá tu cuenta de Supabase para que tus traducciones, QRs y libros se guarden en la nube y estén disponibles en todos tus dispositivos.
+      <br><br>Conseguí las claves gratis en <a href="https://supabase.com" target="_blank" style="color:#3730a3">supabase.com</a> → Tu proyecto → Settings → API Keys.
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div>
+        <label>URL de tu proyecto Supabase</label>
+        <input id="sb-url" type="url" placeholder="https://xxxxx.supabase.co" value="">
+      </div>
+      <div>
+        <label>Anon Key (clave pública)</label>
+        <input id="sb-key" type="password" placeholder="eyJhbGci..." value="">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" onclick="sbConectar()">✅ Conectar y sincronizar</button>
+      <button class="btn-gray" onclick="sbDesconectar()">🔌 Desconectar</button>
+    </div>
+    <div id="sb-status" style="margin-top:10px;font-size:12px"></div>
+  </div>
+  <div class="panel">
+    <div class="ptitle">Estado de sincronización</div>
+    <div id="sb-stats" style="font-size:13px;color:#6b7280"></div>
+  </div>
+  <div class="panel">
+    <div class="ptitle">📱 Instalar como App</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:12px">Instalá Smart Tools en tu dispositivo para usarla sin conexión como una app nativa.</p>
+    <div id="pwa-main-btn">
+      <button onclick="pwaInstall()" id="pwa-btn-main" style="display:none">📲 Instalar Smart Tools</button>
+      <div id="pwa-installed-msg" style="display:none" class="alert a-ok">✅ App ya instalada</div>
+      <div id="pwa-ios-msg" style="display:none" class="alert a-info">
+        En iOS: toca el botón Compartir (□↑) → "Agregar a pantalla de inicio"
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ptitle">💾 Backup & Restaurar</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:12px">Exportá o importá todos tus datos como archivo JSON.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-blue btn-sm" onclick="backupExportar()">📥 Exportar backup</button>
+      <button class="btn-o btn-sm" onclick="document.getElementById('backup-file').click()">📤 Importar backup</button>
+    </div>
+    <input type="file" id="backup-file" accept=".json" style="display:none" onchange="backupImportar(event)">
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL: Detalle libro -->
+<div class="modal" id="modal-libro">
+  <div class="mbox">
+    <div class="mbox-head">
+      <div id="ml-title" style="font-size:17px;font-weight:800;color:#1a1a2e;flex:1;padding-right:12px"></div>
+      <button class="close-x" onclick="cerrarModal('modal-libro')">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div style="display:flex;gap:18px;margin-bottom:16px">
+        <div id="ml-cover-wrap" style="flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div id="ml-author" style="font-size:14px;color:#6b7280;margin-bottom:6px"></div>
+          <div id="ml-meta" style="font-size:12px;color:#aaa;margin-bottom:10px"></div>
+          <div id="ml-cats" style="margin-bottom:10px"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px" id="ml-actions"></div>
+        </div>
+      </div>
+      <div id="ml-desc" style="font-size:13px;color:#444;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalle carpeta -->
+<div class="modal" id="modal-carpeta">
+  <div class="mbox">
+    <div class="mbox-head">
+      <div id="mc-title" style="font-size:17px;font-weight:800;color:#1a1a2e"></div>
+      <button class="close-x" onclick="cerrarModal('modal-carpeta')">✕</button>
+    </div>
+    <div class="mbox-body" id="mc-body"></div>
+  </div>
+</div>
+
+<script>
+// ── ESTADO ────────────────────────────────────────────────
+const D = {
+  carpetas: JSON.parse(localStorage.getItem('st_carpetas') || '{}'), // {nombre: [{orig,trad,from,to,ts}]}
+  libros:   JSON.parse(localStorage.getItem('st_libros')   || '{"quiero":[],"leyendo":[],"leido":[]}'),
+  qrs:      JSON.parse(localStorage.getItem('st_qrs')      || '[]'),
+}
+function saveD() {
+  localStorage.setItem('st_carpetas', JSON.stringify(D.carpetas))
+  localStorage.setItem('st_libros',   JSON.stringify(D.libros))
+  localStorage.setItem('st_qrs',      JSON.stringify(D.qrs))
+  actualizarContadores()
+  // Sync to Supabase (debounced)
+  clearTimeout(window._sbSyncTimer)
+  window._sbSyncTimer = setTimeout(() => sbPush && sbPush(), 3000)
+}
+
+function actualizarContadores() {
+  const nc = Object.keys(D.carpetas).length
+  const nl = (D.libros.quiero||[]).length + (D.libros.leyendo||[]).length + (D.libros.leido||[]).length
+  document.getElementById('cnt-carpetas').textContent = nc
+  document.getElementById('cnt-listas').textContent = nl
+  document.getElementById('cnt-qr').textContent = D.qrs.length
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.mi').forEach(m => m.classList.remove('active'))
+  document.getElementById(page).classList.add('active')
+  if (el) el.classList.add('active')
+  const h = { carpetas: renderCarpetas, listas: renderListas, qrhistory: renderQrHistory, cloud: () => sbUpdateStats() }
+  if (h[page]) h[page]()
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function abrirModal(id) { document.getElementById(id).classList.add('active') }
+function cerrarModal(id) { document.getElementById(id).classList.remove('active') }
+
+// ── TOAST ─────────────────────────────────────────────────
+let _toastTimer
+function toast(msg, tipo) {
+  document.querySelector('.toast')?.remove()
+  const t = document.createElement('div'); t.className = 'toast'
+  t.style.background = tipo==='err'?'#ef4444':tipo==='warn'?'#f59e0b':'#10b981'
+  t.textContent = msg; document.body.appendChild(t)
+  clearTimeout(_toastTimer); _toastTimer = setTimeout(()=>t.remove(),2800)
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ───────────────────────────────────────────────────────────
+// TRADUCTOR
+// ───────────────────────────────────────────────────────────
+let trCurrentResult = ''
+let trCurrentFrom = 'auto'
+let trCurrentTo = 'en'
+
+function trAutoCount() {
+  const v = document.getElementById('tr-input').value
+  document.getElementById('tr-chars').textContent = v.length
+}
+
+function trSwap() {
+  const f = document.getElementById('tr-from')
+  const t = document.getElementById('tr-to')
+  const fv = f.value, tv = t.value
+  if (fv === 'auto') { toast('No se puede invertir "Detectar automáticamente"','warn'); return }
+  f.value = tv; t.value = fv
+  // Swap textos
+  const inp = document.getElementById('tr-input')
+  const res = document.getElementById('tr-result')
+  if (trCurrentResult) {
+    inp.value = trCurrentResult
+    res.textContent = 'La traducción aparecerá acá...'
+    trCurrentResult = ''
+  }
+}
+
+async function traducir() {
+  const texto = document.getElementById('tr-input').value.trim()
+  if (!texto) { toast('Escribí algo para traducir','warn'); return }
+  const from = document.getElementById('tr-from').value
+  const to = document.getElementById('tr-to').value
+  trCurrentFrom = from; trCurrentTo = to
+
+  const res = document.getElementById('tr-result')
+  res.innerHTML = '<div class="spinner"></div>'
+
+  // Dividir en chunks si es muy largo (MyMemory: 500 chars max)
+  const chunks = []
+  for (let i=0; i<texto.length; i+=450) chunks.push(texto.slice(i,i+450))
+
+  try {
+    const parts = await Promise.all(chunks.map(async chunk => {
+      const lp = from === 'auto' ? `en|${to}` : `${from}|${to}`
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${lp}`
+      const r = await fetch(url)
+      const d = await r.json()
+      if (d.responseStatus === 200) return d.responseData.translatedText
+      throw new Error(d.responseDetails || 'Error de traducción')
+    }))
+    trCurrentResult = parts.join(' ')
+    res.textContent = trCurrentResult
+    // Detectar idioma
+    const det = document.getElementById('tr-detected')
+    if (from === 'auto' && chunks[0]) {
+      det.textContent = '🔍 Idioma detectado automáticamente'
+    } else { det.textContent = '' }
+    toast('✅ Traducción lista')
+  } catch(e) {
+    res.innerHTML = `<span style="color:#ef4444">Error: ${esc(e.message)}. Intentá de nuevo.</span>`
+    toast('Error de traducción','err')
+  }
+}
+
+function trCopiar() {
+  if (!trCurrentResult) { toast('Primero traducí algo','warn'); return }
+  navigator.clipboard.writeText(trCurrentResult).then(()=>toast('📋 Copiado')).catch(()=>toast('Error al copiar','err'))
+}
+
+async function trCompartir() {
+  if (!trCurrentResult) { toast('Primero traducí algo','warn'); return }
+  if (navigator.share) {
+    await navigator.share({ text: trCurrentResult })
+  } else {
+    navigator.clipboard.writeText(trCurrentResult).then(()=>toast('📋 Copiado al portapapeles'))
+  }
+}
+
+function trVoz() {
+  if (!trCurrentResult) { toast('Primero traducí algo','warn'); return }
+  const utter = new SpeechSynthesisUtterance(trCurrentResult)
+  utter.lang = trCurrentTo
+  speechSynthesis.speak(utter)
+}
+
+function trLimpiar() {
+  document.getElementById('tr-input').value = ''
+  document.getElementById('tr-result').textContent = 'La traducción aparecerá acá...'
+  document.getElementById('tr-chars').textContent = '0'
+  document.getElementById('tr-detected').textContent = ''
+  document.getElementById('tr-save-panel').style.display = 'none'
+  trCurrentResult = ''
+}
+
+function trGuardar() {
+  if (!trCurrentResult) { toast('Primero traducí algo','warn'); return }
+  document.getElementById('tr-save-panel').style.display = 'block'
+  trRenderFoldersList()
+  document.getElementById('tr-save-panel').scrollIntoView({behavior:'smooth'})
+}
+
+function trRenderFoldersList() {
+  const el = document.getElementById('tr-folders-list')
+  const keys = Object.keys(D.carpetas)
+  el.innerHTML = keys.length
+    ? `<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:#6b7280">ELEGÍ UNA CARPETA:</div>` +
+      keys.map(k => `<span class="folder-tag" onclick="trSelCarpeta(this,'${esc(k)}')">${esc(k)}</span>`).join('')
+    : '<div style="color:#aaa;font-size:12px">No hay carpetas. Creá una arriba.</div>'
+}
+
+let trCarpetaSeleccionada = null
+function trSelCarpeta(el, nombre) {
+  document.querySelectorAll('.folder-tag').forEach(t=>t.classList.remove('selected'))
+  el.classList.add('selected')
+  trCarpetaSeleccionada = nombre
+}
+
+function trCrearCarpeta() {
+  const n = document.getElementById('tr-new-folder').value.trim()
+  if (!n) { toast('Ingresá un nombre','warn'); return }
+  if (!D.carpetas[n]) D.carpetas[n] = []
+  saveD(); document.getElementById('tr-new-folder').value = ''
+  trRenderFoldersList(); toast('📁 Carpeta creada')
+}
+
+function trConfirmarGuardar() {
+  if (!trCarpetaSeleccionada) { toast('Seleccioná una carpeta','warn'); return }
+  const orig = document.getElementById('tr-input').value.trim()
+  const entry = {
+    id: Date.now(),
+    orig, trad: trCurrentResult,
+    from: trCurrentFrom, to: trCurrentTo,
+    ts: new Date().toLocaleString('es-AR')
+  }
+  D.carpetas[trCarpetaSeleccionada].push(entry)
+  saveD()
+  document.getElementById('tr-save-panel').style.display = 'none'
+  trCarpetaSeleccionada = null
+  toast(`✅ Guardado en "${trCarpetaSeleccionada || 'carpeta'}"`)
+}
+
+// ───────────────────────────────────────────────────────────
+// QR GENERATOR
+// ───────────────────────────────────────────────────────────
+let qrTipo = 'url'
+let qrCurrentUrl = ''
+
+const qrTipos = {
+  url:       { label:'🔗 URL o enlace', fields: [{ id:'qr-url', label:'URL', ph:'https://mi-sitio.com', type:'url' }] },
+  texto:     { label:'📝 Texto libre', fields: [{ id:'qr-txt', label:'Texto', ph:'Hola, este es mi QR personalizado', type:'textarea' }] },
+  whatsapp:  { label:'💬 WhatsApp', fields: [{ id:'qr-wa-tel', label:'Número (con código país)', ph:'+5491112345678', type:'tel' }, { id:'qr-wa-msg', label:'Mensaje', ph:'Hola! Vi tu QR...', type:'textarea' }] },
+  email:     { label:'📧 Email', fields: [{ id:'qr-em-to', label:'Destinatario', ph:'correo@ejemplo.com', type:'email' }, { id:'qr-em-sub', label:'Asunto', ph:'Asunto del email', type:'text' }, { id:'qr-em-body', label:'Cuerpo', ph:'Hola...', type:'textarea' }] },
+  wifi:      { label:'📶 Red WiFi', fields: [{ id:'qr-wf-ssid', label:'Nombre de red (SSID)', ph:'Mi WiFi', type:'text' }, { id:'qr-wf-pass', label:'Contraseña', ph:'micontraseña', type:'text' }, { id:'qr-wf-enc', label:'Tipo de seguridad', ph:'WPA', type:'text' }] },
+  tel:       { label:'📞 Teléfono', fields: [{ id:'qr-tel', label:'Número', ph:'+5491112345678', type:'tel' }] },
+  vcard:     { label:'👤 Contacto (vCard)', fields: [{ id:'qr-vc-name', label:'Nombre completo', ph:'Juan Pérez', type:'text' }, { id:'qr-vc-tel', label:'Teléfono', ph:'+5491112345678', type:'tel' }, { id:'qr-vc-email', label:'Email', ph:'juan@email.com', type:'email' }, { id:'qr-vc-org', label:'Empresa', ph:'Mi Empresa S.A.', type:'text' }, { id:'qr-vc-url', label:'Web', ph:'https://mi-web.com', type:'url' }] },
+  youtube:   { label:'▶️ Video YouTube', fields: [{ id:'qr-yt', label:'URL del video', ph:'https://youtube.com/watch?v=...', type:'url' }] },
+}
+
+function qrSetTipo(tipo, el) {
+  qrTipo = tipo
+  document.querySelectorAll('.qr-type-btn').forEach(b=>b.classList.remove('active'))
+  el.classList.add('active')
+  renderQrFields()
+  qrGenerar()
+}
+
+function renderQrFields() {
+  const cfg = qrTipos[qrTipo]
+  document.getElementById('qr-fields').innerHTML = cfg.fields.map(f =>
+    `<div style="margin-bottom:8px">
+      <label>${f.label}</label>
+      ${f.type==='textarea'
+        ? `<textarea id="${f.id}" rows="3" placeholder="${esc(f.ph)}" oninput="qrGenerar()" style="font-size:12px"></textarea>`
+        : `<input id="${f.id}" type="${f.type}" placeholder="${esc(f.ph)}" oninput="qrGenerar()">` }
+    </div>`
+  ).join('')
+}
+
+function qrGetContent() {
+  switch(qrTipo) {
+    case 'url':       return document.getElementById('qr-url')?.value.trim() || ''
+    case 'texto':     return document.getElementById('qr-txt')?.value.trim() || ''
+    case 'whatsapp':  { const tel=(document.getElementById('qr-wa-tel')?.value.trim()||'').replace(/\D/g,''); const msg=document.getElementById('qr-wa-msg')?.value.trim()||''; return tel ? `https://wa.me/${tel}${msg?'?text='+encodeURIComponent(msg):''}` : '' }
+    case 'email':     { const to=document.getElementById('qr-em-to')?.value.trim()||''; const sub=document.getElementById('qr-em-sub')?.value.trim()||''; const body=document.getElementById('qr-em-body')?.value.trim()||''; return to ? `mailto:${to}${sub||body?`?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`:''}` : '' }
+    case 'wifi':      { const ssid=document.getElementById('qr-wf-ssid')?.value.trim()||''; const pass=document.getElementById('qr-wf-pass')?.value.trim()||''; const enc=document.getElementById('qr-wf-enc')?.value.trim()||'WPA'; return ssid ? `WIFI:T:${enc};S:${ssid};P:${pass};;` : '' }
+    case 'tel':       { const tel=document.getElementById('qr-tel')?.value.trim()||''; return tel ? `tel:${tel}` : '' }
+    case 'vcard':     { const n=document.getElementById('qr-vc-name')?.value.trim()||''; if(!n) return ''; const t=document.getElementById('qr-vc-tel')?.value.trim()||''; const e=document.getElementById('qr-vc-email')?.value.trim()||''; const o=document.getElementById('qr-vc-org')?.value.trim()||''; const u=document.getElementById('qr-vc-url')?.value.trim()||''; return `BEGIN:VCARD\nVERSION:3.0\nFN:${n}\n${t?'TEL:'+t+'\n':''}${e?'EMAIL:'+e+'\n':''}${o?'ORG:'+o+'\n':''}${u?'URL:'+u+'\n':''}END:VCARD` }
+    case 'youtube':   return document.getElementById('qr-yt')?.value.trim() || ''
+    default: return ''
+  }
+}
+
+function qrSizeUpdate() {
+  const v = document.getElementById('qr-size').value
+  document.getElementById('qr-size-val').textContent = v
+}
+
+function qrGenerar() {
+  const content = qrGetContent()
+  if (!content) { document.getElementById('qr-preview').innerHTML = '<span style="color:#ccc;font-size:13px">Completá los datos</span>'; document.getElementById('qr-buttons').style.display='none'; return }
+
+  const size = document.getElementById('qr-size').value
+  const color = document.getElementById('qr-color').value.replace('#','')
+  const bg = document.getElementById('qr-bg').value.replace('#','')
+
+  qrCurrentUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(content)}&color=${color}&bgcolor=${bg}&qzone=1`
+
+  const prev = document.getElementById('qr-preview')
+  prev.innerHTML = `<img src="${qrCurrentUrl}" alt="QR Code" style="width:100%;height:100%;object-fit:contain">`
+  document.getElementById('qr-buttons').style.display = 'flex'
+  document.getElementById('qr-url-display').textContent = content.length > 60 ? content.slice(0,60)+'…' : content
+}
+
+async function qrDescargar() {
+  if (!qrCurrentUrl) { toast('Generá un QR primero','warn'); return }
+  toast('⬇️ Descargando...')
+  try {
+    const r = await fetch(qrCurrentUrl)
+    const blob = await r.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `QR-${Date.now()}.png`
+    a.click()
+    toast('✅ QR descargado')
+  } catch(e) {
+    // Fallback: open in new tab
+    window.open(qrCurrentUrl, '_blank')
+  }
+}
+
+function qrGuardar() {
+  if (!qrCurrentUrl) { toast('Generá un QR primero','warn'); return }
+  const content = qrGetContent()
+  D.qrs.push({ id: Date.now(), tipo: qrTipo, content, url: qrCurrentUrl, ts: new Date().toLocaleString('es-AR') })
+  saveD()
+  toast('💾 QR guardado')
+}
+
+function qrCopiarUrl() {
+  if (!qrCurrentUrl) { toast('Generá un QR primero','warn'); return }
+  navigator.clipboard.writeText(qrCurrentUrl).then(()=>toast('📋 URL del QR copiada')).catch(()=>{})
+}
+
+// ───────────────────────────────────────────────────────────
+// BUSCADOR DE LIBROS
+// ───────────────────────────────────────────────────────────
+let libros = []
+let libStartIndex = 0
+let libQuery = ''
+let libFiltroActual = 'all'
+
+async function buscarLibros() {
+  libQuery = document.getElementById('lib-query').value.trim()
+  if (!libQuery) { toast('Escribí algo para buscar','warn'); return }
+  libStartIndex = 0; libros = []
+  document.getElementById('lib-results').innerHTML = '<div class="spinner"></div>'
+  document.getElementById('lib-status').textContent = ''
+  document.getElementById('lib-load-more').style.display = 'none'
+  await fetchLibros()
+}
+
+async function buscarLibrosMas() {
+  libStartIndex += 20
+  await fetchLibros()
+}
+
+async function fetchLibros() {
+  try {
+    let q = encodeURIComponent(libQuery)
+    const filter = libFiltroActual === 'free' ? '&filter=free-ebooks' : libFiltroActual === 'ebook' ? '&filter=ebooks' : ''
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=20&startIndex=${libStartIndex}&langRestrict=es${filter}`
+    const r = await fetch(url)
+    const data = await r.json()
+
+    if (!data.items || data.items.length === 0) {
+      if (libStartIndex === 0) {
+        document.getElementById('lib-results').innerHTML = '<div class="alert a-warn">Sin resultados. Probá con otras palabras.</div>'
+      } else {
+        toast('No hay más resultados','warn')
+      }
+      return
+    }
+    libros = [...libros, ...data.items]
+    renderLibros()
+    const total = data.totalItems || 0
+    document.getElementById('lib-status').textContent = `${total.toLocaleString()} resultados${libStartIndex > 0 ? ` · Mostrando ${libros.length}` : ''}`
+    document.getElementById('lib-load-more').style.display = libros.length < total && libros.length < 100 ? 'block' : 'none'
+  } catch(e) {
+    document.getElementById('lib-results').innerHTML = `<div class="alert a-err">Error al buscar: ${esc(e.message)}</div>`
+  }
+}
+
+function libFiltro(tipo, el) {
+  libFiltroActual = tipo
+  document.querySelectorAll('#lib-filters .chip').forEach(c=>c.classList.remove('active-chip'))
+  el.classList.add('active-chip')
+  if (libQuery) buscarLibros()
+}
+
+function renderLibros() {
+  const el = document.getElementById('lib-results')
+  el.innerHTML = libros.map(b => {
+    const v = b.volumeInfo || {}
+    const cover = v.imageLinks?.thumbnail || v.imageLinks?.smallThumbnail || ''
+    const autor = v.authors ? v.authors.slice(0,2).join(', ') : 'Autor desconocido'
+    const year = v.publishedDate ? v.publishedDate.slice(0,4) : ''
+    const hasPdf = b.accessInfo?.pdf?.isAvailable || b.accessInfo?.epub?.isAvailable
+    return `<div class="book-card" onclick="verLibro('${esc(b.id)}')">
+      <div class="no-cover">${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" style="width:100%;height:190px;object-fit:cover">` : '📚'}</div>
+      <div class="book-info">
+        <div class="book-title">${esc(v.title||'Sin título')}</div>
+        <div class="book-author">${esc(autor)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="book-year">${year}</div>
+          ${hasPdf ? '<span style="font-size:9px;background:#d1fae5;color:#065f46;padding:1px 5px;border-radius:3px;font-weight:700">PDF</span>' : ''}
+        </div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function verLibro(id) {
+  const b = libros.find(x => x.id === id)
+  if (!b) return
+  const v = b.volumeInfo || {}
+  const ai = b.accessInfo || {}
+  const cover = v.imageLinks?.thumbnail?.replace('http:','https:') || v.imageLinks?.smallThumbnail?.replace('http:','https:') || ''
+  const autor = v.authors ? v.authors.join(', ') : 'Autor desconocido'
+  const hasFreeEpub = ai.epub?.isAvailable && ai.epub?.acsTokenLink
+  const hasFreePdf  = ai.pdf?.isAvailable && ai.pdf?.acsTokenLink
+  const googleBooksUrl = v.canonicalVolumeLink || `https://books.google.com/books?id=${id}`
+  const openLibUrl = `https://openlibrary.org/search?q=${encodeURIComponent(v.title||'')}+${encodeURIComponent(autor)}`
+  const gutenberg = `https://www.gutenberg.org/ebooks/search/?query=${encodeURIComponent(v.title||'')}`
+
+  document.getElementById('ml-title').textContent = v.title || 'Sin título'
+  document.getElementById('ml-author').innerHTML = `<strong>✍️ ${esc(autor)}</strong>`
+  document.getElementById('ml-meta').innerHTML = [
+    v.publishedDate ? '📅 ' + v.publishedDate : '',
+    v.pageCount ? '📄 ' + v.pageCount + ' páginas' : '',
+    v.publisher ? '🏠 ' + esc(v.publisher) : '',
+    v.language ? '🌐 ' + esc(v.language.toUpperCase()) : '',
+    v.averageRating ? '⭐ ' + v.averageRating + '/5 (' + (v.ratingsCount||0) + ')' : ''
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ')
+  document.getElementById('ml-cats').innerHTML = (v.categories||[]).map(c=>`<span class="badge badge-p">${esc(c)}</span>`).join('')
+  document.getElementById('ml-cover-wrap').innerHTML = cover ? `<img src="${esc(cover)}" class="book-detail-cover" alt="">` : `<div class="book-detail-cover" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:48px;border-radius:8px">📚</div>`
+
+  document.getElementById('ml-desc').innerHTML = v.description
+    ? v.description.length > 800 ? esc(v.description.slice(0,800)) + '...' : esc(v.description)
+    : '<em style="color:#aaa">Sin descripción disponible.</em>'
+
+  // Acciones
+  let acts = `
+    <button class="btn-sm btn-blue" onclick="window.open('${esc(googleBooksUrl)}','_blank')">📖 Google Books</button>
+    <button class="btn-sm btn-gray" onclick="window.open('${esc(openLibUrl)}','_blank')">🔍 Open Library</button>
+    <button class="btn-sm btn-gray" onclick="window.open('${esc(gutenberg)}','_blank')">📚 Gutenberg</button>
+  `
+  if (hasFreePdf || hasFreeEpub) acts += `<button class="btn-sm btn-g" onclick="window.open('${esc(ai.pdf?.acsTokenLink || ai.epub?.acsTokenLink || googleBooksUrl)}','_blank')">📥 Descargar</button>`
+  acts += `<button class="btn-sm btn-o" onclick="libCopiarInfo('${esc(id)}')">📋 Copiar info</button>`
+  acts += `<button class="btn-sm btn-violet" onclick="libCompartir('${esc(id)}')">📤 Compartir</button>`
+  acts += `<div style="margin-top:8px;width:100%;display:flex;gap:4px;flex-wrap:wrap">`
+  acts += `<button class="btn-xs btn-g" onclick="libGuardar('${esc(id)}','quiero')">🔖 Quiero leer</button>`
+  acts += `<button class="btn-xs btn-blue" onclick="libGuardar('${esc(id)}','leyendo')">📖 Leyendo</button>`
+  acts += `<button class="btn-xs btn-violet" onclick="libGuardar('${esc(id)}','leido')">✅ Leído</button>`
+  acts += `</div>`
+  document.getElementById('ml-actions').innerHTML = acts
+
+  abrirModal('modal-libro')
+}
+
+function libCopiarInfo(id) {
+  const b = libros.find(x => x.id === id)
+  if (!b) return
+  const v = b.volumeInfo || {}
+  const txt = `📚 ${v.title||'Sin título'}
+✍️ ${(v.authors||[]).join(', ')}
+📅 ${v.publishedDate||'—'} · 📄 ${v.pageCount||'—'} pgs
+🌐 ${v.canonicalVolumeLink || 'https://books.google.com/books?id='+id}
+${v.description ? '\n'+v.description.slice(0,200)+'...' : ''}`
+  navigator.clipboard.writeText(txt).then(()=>toast('📋 Info copiada')).catch(()=>toast('Error al copiar','err'))
+}
+
+async function libCompartir(id) {
+  const b = libros.find(x => x.id === id)
+  if (!b) return
+  const v = b.volumeInfo || {}
+  const url = v.canonicalVolumeLink || `https://books.google.com/books?id=${id}`
+  if (navigator.share) {
+    await navigator.share({ title: v.title, text: `Mirá este libro: ${v.title} de ${(v.authors||[]).join(', ')}`, url })
+  } else {
+    navigator.clipboard.writeText(url).then(()=>toast('📋 URL copiada'))
+  }
+}
+
+function libGuardar(id, lista) {
+  const b = libros.find(x => x.id === id)
+  if (!b) return
+  const v = b.volumeInfo || {}
+  const entry = {
+    id: b.id,
+    title: v.title || 'Sin título',
+    author: (v.authors||[]).join(', '),
+    cover: v.imageLinks?.thumbnail?.replace('http:','https:') || '',
+    year: v.publishedDate ? v.publishedDate.slice(0,4) : '',
+    url: v.canonicalVolumeLink || `https://books.google.com/books?id=${b.id}`,
+    ts: new Date().toLocaleString('es-AR')
+  }
+  // Remove from other lists
+  ;['quiero','leyendo','leido'].forEach(l => {
+    D.libros[l] = (D.libros[l]||[]).filter(x => x.id !== b.id)
+  })
+  D.libros[lista] = [...(D.libros[lista]||[]), entry]
+  saveD()
+  const nombres = {quiero:'Quiero leer', leyendo:'Leyendo', leido:'Leídos'}
+  toast(`✅ Agregado a "${nombres[lista]}"`)
+}
+
+function libMostrarLista() {
+  nav('listas', document.getElementById('nav-listas'))
+}
+
+// ───────────────────────────────────────────────────────────
+// CARPETAS
+// ───────────────────────────────────────────────────────────
+function renderCarpetas() {
+  const el = document.getElementById('carpetas-list')
+  const keys = Object.keys(D.carpetas)
+  if (!keys.length) {
+    el.innerHTML = '<div class="panel"><div class="alert a-info">Sin carpetas. Traducí algo y guardalo para crear tu primera carpeta.</div></div>'
+    return
+  }
+  el.innerHTML = `<div class="g3">${keys.map(k => `
+    <div class="panel folder-card" onclick="verCarpeta('${esc(k)}')">
+      <div style="font-size:22px;margin-bottom:6px">📁</div>
+      <div style="font-weight:700;font-size:14px;color:#1a1a2e;margin-bottom:4px">${esc(k)}</div>
+      <div style="font-size:12px;color:#6b7280">${D.carpetas[k].length} traduccion${D.carpetas[k].length!==1?'es':''}</div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn-xs btn-r" onclick="event.stopPropagation();borrarCarpeta('${esc(k)}')">🗑</button>
+      </div>
+    </div>`).join('')}</div>`
+}
+
+function verCarpeta(nombre) {
+  const items = D.carpetas[nombre] || []
+  document.getElementById('mc-title').textContent = `📁 ${nombre} (${items.length})`
+  document.getElementById('mc-body').innerHTML = items.length
+    ? items.map(it => `<div class="saved-item">
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">${it.ts} · ${it.from}→${it.to}</div>
+        <div style="font-size:12px;color:#666;margin-bottom:6px;border-left:2px solid #e0e7ff;padding-left:8px">${esc(it.orig?.slice(0,100))}${it.orig?.length>100?'…':''}</div>
+        <div style="font-size:13px;font-weight:600;color:#1a1a2e;border-left:2px solid #a78bfa;padding-left:8px">${esc(it.trad)}</div>
+        <div style="margin-top:6px;display:flex;gap:4px">
+          <button class="btn-xs btn-gray" onclick="navigator.clipboard.writeText('${esc(it.trad)}');toast('📋 Copiado')">Copiar</button>
+          <button class="btn-xs btn-r" onclick="borrarTraduccion('${esc(nombre)}',${it.id})">Borrar</button>
+        </div>
+      </div>`).join('')
+    : '<div class="alert a-info">Esta carpeta está vacía</div>'
+  abrirModal('modal-carpeta')
+}
+
+function borrarTraduccion(carpeta, id) {
+  D.carpetas[carpeta] = D.carpetas[carpeta].filter(x => x.id !== id)
+  saveD(); verCarpeta(carpeta); renderCarpetas()
+  toast('🗑 Traducción eliminada')
+}
+
+function borrarCarpeta(nombre) {
+  if (!confirm(`¿Eliminar la carpeta "${nombre}" y todas sus traducciones?`)) return
+  delete D.carpetas[nombre]; saveD(); renderCarpetas(); toast('🗑 Carpeta eliminada')
+}
+
+function carpetaNueva() {
+  const n = prompt('Nombre de la nueva carpeta:')
+  if (!n) return
+  if (!D.carpetas[n]) D.carpetas[n] = []
+  saveD(); renderCarpetas(); toast('📁 Carpeta creada')
+}
+
+// ───────────────────────────────────────────────────────────
+// LISTAS DE LIBROS
+// ───────────────────────────────────────────────────────────
+function renderListas() {
+  const render = (lista, elId, cntId) => {
+    const items = D.libros[lista] || []
+    document.getElementById(cntId).textContent = items.length
+    document.getElementById(elId).innerHTML = items.length
+      ? items.map(b => `<div class="saved-item">
+          <div style="display:flex;gap:10px;align-items:center">
+            ${b.cover ? `<img src="${esc(b.cover)}" style="width:36px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0">` : '<div style="width:36px;height:52px;background:#e0e7ff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📚</div>'}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.title)}</div>
+              <div style="font-size:10px;color:#6b7280">${esc(b.author)} ${b.year?'· '+b.year:''}</div>
+              <div style="display:flex;gap:4px;margin-top:5px">
+                <a href="${esc(b.url)}" target="_blank" style="font-size:10px;color:#667eea;font-weight:600">Ver →</a>
+                <button class="btn-xs btn-r" onclick="quitarDeLista('${esc(lista)}','${esc(b.id)}')">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>`).join('')
+      : '<div style="color:#ccc;font-size:12px;text-align:center;padding:16px">Vacío</div>'
+  }
+  render('quiero','lista-quiero','cnt-ql')
+  render('leyendo','lista-leyendo','cnt-le')
+  render('leido','lista-leido','cnt-leido')
+}
+
+function quitarDeLista(lista, id) {
+  D.libros[lista] = D.libros[lista].filter(x => x.id !== id)
+  saveD(); renderListas(); toast('✅ Quitado de la lista')
+}
+
+// ───────────────────────────────────────────────────────────
+// QR HISTORY
+// ───────────────────────────────────────────────────────────
+function renderQrHistory() {
+  const el = document.getElementById('qr-history-list')
+  if (!D.qrs.length) { el.innerHTML = '<div class="alert a-info">No guardaste ningún QR todavía.</div>'; return }
+  el.innerHTML = D.qrs.slice().reverse().map(q => `
+    <div class="qr-history-item">
+      <img src="${esc(q.url)}" style="width:60px;height:60px;border-radius:6px;border:1px solid #e0e7ff">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:#1a1a2e">${esc(q.tipo.toUpperCase())}</div>
+        <div style="font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(q.content)}</div>
+        <div style="font-size:10px;color:#aaa">${q.ts}</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn-xs btn-blue" onclick="window.open('${esc(q.url)}','_blank')">👁</button>
+        <button class="btn-xs btn-g" onclick="qrDescargarDirect('${esc(q.url)}')">📥</button>
+        <button class="btn-xs btn-r" onclick="borrarQr(${q.id})">🗑</button>
+      </div>
+    </div>`).join('')
+}
+
+async function qrDescargarDirect(url) {
+  try {
+    const r = await fetch(url); const blob = await r.blob()
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `QR-${Date.now()}.png`; a.click()
+    toast('✅ QR descargado')
+  } catch(e) { window.open(url,'_blank') }
+}
+
+function borrarQr(id) {
+  D.qrs = D.qrs.filter(q => q.id !== id)
+  saveD(); renderQrHistory(); toast('🗑 QR eliminado')
+}
+
+// ── ESC key ───────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'))
+})
+
+
+
+// ───────────────────────────────────────────────────────────
+// SUPABASE CLOUD SYNC
+// ───────────────────────────────────────────────────────────
+const SB_CFG_KEY = 'st_supabase_cfg'
+let sbCfg = JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null')
+let sbUserKey = localStorage.getItem('st_user_key') || (() => { const k = 'user_' + Math.random().toString(36).slice(2,10); localStorage.setItem('st_user_key', k); return k })()
+
+function sbHeaders(cfg) {
+  return { 'apikey': cfg.key, 'Authorization': 'Bearer ' + cfg.key, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' }
+}
+
+async function sbConectar() {
+  const url = document.getElementById('sb-url').value.trim().replace(/\/$/, '')
+  const key = document.getElementById('sb-key').value.trim()
+  if (!url || !key) { toast('Ingresá URL y clave Anon', 'warn'); return }
+  
+  const status = document.getElementById('sb-status')
+  status.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0"></div> Conectando...'
+  
+  try {
+    // Test connection
+    const r = await fetch(url + '/rest/v1/smarttools_sync?limit=1', {
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
+    })
+    
+    if (r.status === 404 || r.status === 200 || r.status === 401) {
+      // Connection works — need to ensure table exists
+      if (r.status === 404) {
+        // Table doesn't exist — show instructions
+        status.innerHTML = `<div class="alert a-warn">
+          La tabla <strong>smarttools_sync</strong> no existe todavía en tu Supabase.<br>
+          Andá a Supabase → SQL Editor y ejecutá este comando:<br>
+          <code style="display:block;background:#f9fafb;padding:8px;border-radius:6px;margin-top:6px;font-size:11px;white-space:pre-wrap">CREATE TABLE IF NOT EXISTS smarttools_sync (
+  user_key TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE smarttools_sync ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow all" ON smarttools_sync FOR ALL USING (true);</code>
+          <button class="btn-blue btn-sm" style="margin-top:8px" onclick="sbConectarForzado()">✅ Ya lo hice, conectar</button>
+        </div>`
+        sbCfg = { url, key }
+        localStorage.setItem(SB_CFG_KEY, JSON.stringify(sbCfg))
+        return
+      }
+      sbCfg = { url, key }
+      localStorage.setItem(SB_CFG_KEY, JSON.stringify(sbCfg))
+      await sbPush()
+      status.innerHTML = '<div class="alert a-ok">✅ Conectado y sincronizado</div>'
+      toast('☁️ Conectado a Supabase')
+      sbUpdateStats()
+    } else {
+      status.innerHTML = `<div class="alert a-err">Error de conexión: ${r.status}. Verificá la URL y la clave.</div>`
+    }
+  } catch(e) {
+    status.innerHTML = `<div class="alert a-err">Error: ${e.message}</div>`
+  }
+}
+
+async function sbConectarForzado() {
+  if (!sbCfg) return
+  const status = document.getElementById('sb-status')
+  status.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0"></div> Sincronizando...'
+  await sbPush()
+  status.innerHTML = '<div class="alert a-ok">✅ Conectado y sincronizado</div>'
+  toast('☁️ Conectado a Supabase')
+  sbUpdateStats()
+}
+
+function sbDesconectar() {
+  sbCfg = null
+  localStorage.removeItem(SB_CFG_KEY)
+  document.getElementById('sb-status').innerHTML = '<div class="alert a-info">Desconectado. Los datos siguen guardados localmente.</div>'
+  document.getElementById('sb-url').value = ''
+  document.getElementById('sb-key').value = ''
+  sbUpdateStats()
+  toast('Desconectado de Supabase')
+}
+
+async function sbPush() {
+  if (!sbCfg) return
+  try {
+    const payload = { user_key: sbUserKey, data: D, updated_at: new Date().toISOString() }
+    await fetch(sbCfg.url + '/rest/v1/smarttools_sync', {
+      method: 'POST',
+      headers: { ...sbHeaders(sbCfg), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(payload)
+    })
+  } catch(e) { /* silent fail */ }
+}
+
+async function sbPull() {
+  if (!sbCfg) return
+  try {
+    const r = await fetch(sbCfg.url + `/rest/v1/smarttools_sync?user_key=eq.${sbUserKey}&limit=1`, {
+      headers: sbHeaders(sbCfg)
+    })
+    if (r.ok) {
+      const rows = await r.json()
+      if (rows[0]?.data) {
+        const remote = rows[0].data
+        // Merge: keep most data
+        if (remote.carpetas) D.carpetas = { ...D.carpetas, ...remote.carpetas }
+        if (remote.libros) {
+          D.libros.quiero = [...new Map([...D.libros.quiero, ...(remote.libros.quiero||[])].map(b => [b.id, b])).values()]
+          D.libros.leyendo = [...new Map([...D.libros.leyendo, ...(remote.libros.leyendo||[])].map(b => [b.id, b])).values()]
+          D.libros.leido = [...new Map([...D.libros.leido, ...(remote.libros.leido||[])].map(b => [b.id, b])).values()]
+        }
+        if (remote.qrs) D.qrs = [...new Map([...D.qrs, ...(remote.qrs||[])].map(q => [q.id, q])).values()]
+        saveD()
+        toast('☁️ Datos sincronizados desde la nube')
+      }
+    }
+  } catch(e) { /* silent */ }
+}
+
+async function sbSync() {
+  if (!sbCfg) { toast('Configurá Supabase primero', 'warn'); nav('cloud'); return }
+  toast('☁️ Sincronizando...')
+  await sbPull()
+  await sbPush()
+  sbUpdateStats()
+  toast('✅ Sincronizado')
+}
+
+function sbUpdateStats() {
+  const el = document.getElementById('sb-stats')
+  if (!el) return
+  if (!sbCfg) {
+    el.innerHTML = '<span style="color:#ef4444">❌ No conectado</span> — Configurá Supabase arriba para habilitar el sync en la nube.'
+  } else {
+    const nc = Object.keys(D.carpetas).length
+    const nl = (D.libros.quiero||[]).length + (D.libros.leyendo||[]).length + (D.libros.leido||[]).length
+    el.innerHTML = `<span style="color:#10b981">✅ Conectado</span> a ${sbCfg.url.replace('https://','').split('.')[0]}...<br>
+    📁 ${nc} carpetas · 📚 ${nl} libros · 🗂 ${D.qrs.length} QRs guardados<br>
+    <span style="font-size:11px;color:#aaa">ID: ${sbUserKey}</span>`
+  }
+}
+
+// ───────────────────────────────────────────────────────────
+// PWA — INSTALACIÓN
+// ───────────────────────────────────────────────────────────
+let _pwaPrompt = null
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault()
+  _pwaPrompt = e
+  document.getElementById('pwa-install-btn').style.display = 'block'
+  const btn = document.getElementById('pwa-btn-main')
+  if (btn) btn.style.display = 'inline-block'
+})
+
+window.addEventListener('appinstalled', () => {
+  _pwaPrompt = null
+  document.getElementById('pwa-install-btn').style.display = 'none'
+  const btn = document.getElementById('pwa-btn-main')
+  const msg = document.getElementById('pwa-installed-msg')
+  if (btn) btn.style.display = 'none'
+  if (msg) msg.style.display = 'block'
+  toast('🎉 App instalada')
+})
+
+async function pwaInstall() {
+  if (!_pwaPrompt) {
+    // iOS
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
+    if (ios) {
+      document.getElementById('pwa-ios-msg').style.display = 'block'
+    }
+    return
+  }
+  _pwaPrompt.prompt()
+  const { outcome } = await _pwaPrompt.userChoice
+  if (outcome === 'accepted') toast('🎉 App instalándose...')
+  _pwaPrompt = null
+}
+
+// Check if iOS
+;(() => {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  if (isIos && !isStandalone) {
+    const msg = document.getElementById('pwa-ios-msg')
+    if (msg) msg.style.display = 'block'
+  }
+  if (isStandalone) {
+    const btn = document.getElementById('pwa-btn-main')
+    const msg = document.getElementById('pwa-installed-msg')
+    if (btn) btn.style.display = 'none'
+    if (msg) msg.style.display = 'block'
+  }
+})()
+
+// ───────────────────────────────────────────────────────────
+// BACKUP
+// ───────────────────────────────────────────────────────────
+function backupExportar() {
+  const data = { version: 1, ts: new Date().toISOString(), carpetas: D.carpetas, libros: D.libros, qrs: D.qrs }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `SmartTools-backup-${new Date().toLocaleDateString('es-AR').replace(/\//g,'-')}.json`
+  a.click()
+  toast('📥 Backup exportado')
+}
+
+function backupImportar(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result)
+      if (data.carpetas) D.carpetas = { ...D.carpetas, ...data.carpetas }
+      if (data.libros?.quiero) D.libros.quiero = [...new Set([...D.libros.quiero, ...data.libros.quiero])]
+      if (data.libros?.leyendo) D.libros.leyendo = [...new Set([...D.libros.leyendo, ...data.libros.leyendo])]
+      if (data.libros?.leido) D.libros.leido = [...new Set([...D.libros.leido, ...data.libros.leido])]
+      if (data.qrs) D.qrs = [...new Set([...D.qrs, ...data.qrs])]
+      saveD()
+      toast('✅ Backup importado')
+    } catch(err) { toast('Error al importar: archivo inválido', 'err') }
+  }
+  reader.readAsText(file)
+}
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(r => {
+      console.log('SW registered')
+    }).catch(e => console.log('SW error:', e))
+  })
+}
+
+// Load Supabase config on init
+;(() => {
+  if (sbCfg) {
+    const urlEl = document.getElementById('sb-url')
+    const keyEl = document.getElementById('sb-key')
+    if (urlEl) urlEl.value = sbCfg.url
+    if (keyEl) keyEl.value = sbCfg.key
+    // Pull from cloud on startup
+    sbPull()
+  }
+  sbUpdateStats()
+})()
+
+// ── INIT ─────────────────────────────────────────────────
+renderQrFields()
+actualizarContadores()
+</script>
+</body>
+</html>
